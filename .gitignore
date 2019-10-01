@@ -1,0 +1,21 @@
+/build/*
+**/SFML/**
+*.sdf
+*.exp
+*.opensdf
+**/3rdparty/**
+**/ipch/**
+**/*bckp*/**
+*- Copy
+*.ipdb*
+*.iobj*
+*.opendb
+*.zip
+*.pdb
+*.ilk
+*.img
+*.dat
+*_u.spv
+.vs
+/bin/movies/*
+/bin/data/Meshes/*
