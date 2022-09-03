@@ -1,6 +1,14 @@
+#pragma once
+
+#include "ProfilerTask.h"
+#include "imgui.h"
+#include <array>
+#include <map>
+#include <vector>
+
 namespace ImGuiUtils
 {
-  glm::vec2 Vec2(ImVec2 vec)
+  inline glm::vec2 Vec2(ImVec2 vec)
   {
     return glm::vec2(vec.x, vec.y);
   }
@@ -10,6 +18,7 @@ namespace ImGuiUtils
     int frameWidth;
     int frameSpacing;
     bool useColoredLegendText;
+    float maxFrameTime = 1.0f / 30.0f;
 
     ProfilerGraph(size_t framesCount)
     {
@@ -110,7 +119,6 @@ namespace ImGuiUtils
     void RenderGraph(ImDrawList *drawList, glm::vec2 graphPos, glm::vec2 graphSize, size_t frameIndexOffset)
     {
       Rect(drawList, graphPos, graphPos + graphSize, 0xffffffff, false);
-      float maxFrameTime = 1.0f / 30.0f;
       float heightThreshold = 1.0f;
 
       for (size_t frameNumber = 0; frameNumber < frames.size(); frameNumber++)
@@ -122,7 +130,7 @@ namespace ImGuiUtils
           break;
         glm::vec2 taskPos = framePos + glm::vec2(0.0f, 0.0f);
         auto &frame = frames[frameIndex];
-        for (auto task : frame.tasks)
+        for (const auto& task : frame.tasks)
         {
           float taskStartHeight = (float(task.startTime) / maxFrameTime) * graphSize.y;
           float taskEndHeight = (float(task.endTime) / maxFrameTime) * graphSize.y;
