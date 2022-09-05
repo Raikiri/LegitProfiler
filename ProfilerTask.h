@@ -1,4 +1,8 @@
 #pragma once
+
+#include <cstdint>
+#include <string>
+
 namespace legit
 {
   namespace Colors
