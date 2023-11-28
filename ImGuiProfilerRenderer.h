@@ -144,7 +144,6 @@ namespace ImGuiUtils
     {
       float markerLeftRectMargin = 3.0f;
       float markerLeftRectWidth = 5.0f;
-      float maxFrameTime = 1.0f / 30.0f;
       float markerMidWidth = 30.0f;
       float markerRightRectWidth = 10.0f;
       float markerRigthRectMargin = 3.0f;
