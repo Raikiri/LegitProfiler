@@ -18,7 +18,6 @@ namespace ImGuiUtils
     int frameWidth;
     int frameSpacing;
     bool useColoredLegendText;
-    float maxFrameTime = 1.0f / 30.0f;
 
     ProfilerGraph(size_t framesCount)
     {
@@ -70,12 +69,12 @@ namespace ImGuiUtils
       RebuildTaskStats(currFrameIndex, 300/*frames.size()*/);
     }
 
-    void RenderTimings(int graphWidth, int legendWidth, int height, int frameIndexOffset)
+    void RenderTimings(int graphWidth, int legendWidth, int height, int frameIndexOffset, float maxFrameTime)
     {
       ImDrawList* drawList = ImGui::GetWindowDrawList();
       const glm::vec2 widgetPos = Vec2(ImGui::GetCursorScreenPos());
-      RenderGraph(drawList, widgetPos, glm::vec2(graphWidth, height), frameIndexOffset);
-      RenderLegend(drawList, widgetPos + glm::vec2(graphWidth, 0.0f), glm::vec2(legendWidth, height), frameIndexOffset);
+      RenderGraph(drawList, widgetPos, glm::vec2(graphWidth, height), frameIndexOffset, maxFrameTime);
+      RenderLegend(drawList, widgetPos + glm::vec2(graphWidth, 0.0f), glm::vec2(legendWidth, height), frameIndexOffset, maxFrameTime);
       ImGui::Dummy(ImVec2(float(graphWidth + legendWidth), float(height)));
     }
 
@@ -116,7 +115,7 @@ namespace ImGuiUtils
         taskStats[statIndex].priorityOrder = statNumber;
       }
     }
-    void RenderGraph(ImDrawList *drawList, glm::vec2 graphPos, glm::vec2 graphSize, size_t frameIndexOffset)
+    void RenderGraph(ImDrawList *drawList, glm::vec2 graphPos, glm::vec2 graphSize, size_t frameIndexOffset, float maxFrameTime)
     {
       Rect(drawList, graphPos, graphPos + graphSize, 0xffffffff, false);
       float heightThreshold = 1.0f;
@@ -140,7 +139,7 @@ namespace ImGuiUtils
         }
       }
     }
-    void RenderLegend(ImDrawList *drawList, glm::vec2 legendPos, glm::vec2 legendSize, size_t frameIndexOffset)
+    void RenderLegend(ImDrawList *drawList, glm::vec2 legendPos, glm::vec2 legendSize, size_t frameIndexOffset, float maxFrameTime)
     {
       float markerLeftRectMargin = 3.0f;
       float markerLeftRectWidth = 5.0f;
@@ -343,9 +342,10 @@ namespace ImGuiUtils
   class ProfilersWindow
   {
   public:
-    ProfilersWindow():
+    ProfilersWindow(float maxFrameTime = 1.0f / 60.0f):
       cpuGraph(300),
-      gpuGraph(300)
+      gpuGraph(300),
+      maxFrameTime(maxFrameTime)
     {
       stopProfiling = false;
       frameOffset = 0;
@@ -383,8 +383,8 @@ namespace ImGuiUtils
       int graphHeight = std::min(maxGraphHeight, availableGraphHeight);
       int legendWidth = 200;
       int graphWidth = int(canvasSize.x) - legendWidth;
-      gpuGraph.RenderTimings(graphWidth, legendWidth, graphHeight, frameOffset);
-      cpuGraph.RenderTimings(graphWidth, legendWidth, graphHeight, frameOffset);
+      gpuGraph.RenderTimings(graphWidth, legendWidth, graphHeight, frameOffset, maxFrameTime);
+      cpuGraph.RenderTimings(graphWidth, legendWidth, graphHeight, frameOffset, maxFrameTime);
       if (graphHeight * 2 + sizeMargin + sizeMargin < canvasSize.y)
       {
         ImGui::Columns(2);
@@ -422,6 +422,7 @@ namespace ImGuiUtils
     TimePoint prevFpsFrameTime;
     size_t fpsFramesCount;
     float avgFrameTime;
+    float maxFrameTime;
   };
 }
 
