@@ -33,6 +33,7 @@ namespace ImGuiUtils
     {
       auto &currFrame = frames[currFrameIndex];
       currFrame.tasks.resize(0);
+      currFrame.totalTime = 0.0f;
       for (size_t taskIndex = 0; taskIndex < count; taskIndex++)
       {
         if (taskIndex == 0)
@@ -48,6 +49,7 @@ namespace ImGuiUtils
             currFrame.tasks.back().endTime = tasks[taskIndex].endTime;
           }
         }
+        currFrame.totalTime += tasks[taskIndex].endTime - tasks[taskIndex].startTime;
       }
       currFrame.taskStatsIndex.resize(currFrame.tasks.size());
 
@@ -68,7 +70,10 @@ namespace ImGuiUtils
 
       RebuildTaskStats(currFrameIndex, 300/*frames.size()*/);
     }
-
+    float GetTotalTaskTime(int frameIndexOffset)
+    {
+      return frames[GetCurrFrameIndex(frameIndexOffset)].totalTime;
+    }
     void RenderTimings(int graphWidth, int legendWidth, int height, int frameIndexOffset, float maxFrameTime)
     {
       ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -83,6 +88,10 @@ namespace ImGuiUtils
 
     }*/
   private:
+    size_t GetCurrFrameIndex(size_t frameIndexOffset)
+    {
+      return (currFrameIndex - frameIndexOffset - 1 + 2 * frames.size()) % frames.size();
+    }
     void RebuildTaskStats(size_t endFrame, size_t framesCount)
     {
       for (auto &taskStat : taskStats)
@@ -122,7 +131,7 @@ namespace ImGuiUtils
 
       for (size_t frameNumber = 0; frameNumber < frames.size(); frameNumber++)
       {
-        size_t frameIndex = (currFrameIndex - frameIndexOffset - 1 - frameNumber + 2 * frames.size()) % frames.size();
+        size_t frameIndex = GetCurrFrameIndex(frameIndexOffset + frameNumber);
 
         glm::vec2 framePos = graphPos + glm::vec2(graphSize.x - 1 - frameWidth - (frameWidth + frameSpacing) * frameNumber, graphSize.y - 1);
         if (framePos.x < graphPos.x + 1)
@@ -151,7 +160,7 @@ namespace ImGuiUtils
       float nameOffset = 30.0f;
       glm::vec2 textMargin = glm::vec2(5.0f, -3.0f);
 
-      auto &currFrame = frames[(currFrameIndex - frameIndexOffset - 1 + 2 * frames.size()) % frames.size()];
+      auto &currFrame = frames[GetCurrFrameIndex(frameIndexOffset)];
       size_t maxTasksCount = size_t(legendSize.y / (markerRightRectHeight + markerRightRectSpacing));
 
       for (auto &taskStat : taskStats)
@@ -292,32 +301,9 @@ namespace ImGuiUtils
     }
     struct FrameData
     {
-      /*void BuildPriorityTasks(size_t maxPriorityTasksCount)
-      {
-        priorityTaskIndices.clear();
-        std::set<std::string> usedTaskNames;
-
-        for (size_t priorityIndex = 0; priorityIndex < maxPriorityTasksCount; priorityIndex++)
-        {
-          size_t bestTaskIndex = size_t(-1);
-          for (size_t taskIndex = 0; taskIndex < tasks.size(); taskIndex++)
-          {
-            auto &task = tasks[taskIndex];
-            auto it = usedTaskNames.find(tasks[taskIndex].name);
-            if (it == usedTaskNames.end() && (bestTaskIndex == size_t(-1) || tasks[bestTaskIndex].GetLength() < task.GetLength()))
-            {
-              bestTaskIndex = taskIndex;
-            }
-          }
-          if (bestTaskIndex == size_t(-1))
-            break;
-          priorityTaskIndices.push_back(bestTaskIndex);
-          usedTaskNames.insert(tasks[bestTaskIndex].name);
-        }
-      }*/
       std::vector<legit::ProfilerTask> tasks;
       std::vector<size_t> taskStatsIndex;
-      //std::vector<size_t> priorityTaskIndices;
+      float totalTime;
     };
 
     struct TaskStats
@@ -372,9 +358,16 @@ namespace ImGuiUtils
 
       std::stringstream title;
       title.precision(2);
-      title << std::fixed << "Legit profiler [" << 1.0f / avgFrameTime << "fps\t" << avgFrameTime * 1000.0f << "ms]###ProfilerWindow";
+      title << std::fixed << "Legit profiler [" << 1.0f / avgFrameTime << "fps\t" << " cpu: " << cpuGraph.GetTotalTaskTime(frameOffset) * 1000.0f << "ms gpu: " << gpuGraph.GetTotalTaskTime(frameOffset) * 1000.0f << "ms]###ProfilerWindow";
       //###AnimatedTitle
       ImGui::Begin(title.str().c_str(), 0, ImGuiWindowFlags_NoScrollbar);
+      /*if (ImGui::BeginMenuBar())
+      {
+        if (ImGui::BeginMenu("Menu"))
+        {
+        }
+      }
+      ImGui::EndMenuBar();*/
       ImVec2 canvasSize = ImGui::GetContentRegionAvail();
 
       int sizeMargin = int(ImGui::GetStyle().ItemSpacing.y);
